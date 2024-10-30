@@ -3,60 +3,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Input Names and Numbers</title>
+<title>Countdown Page</title>
 <style>
-  .input-pair {
-    margin-bottom: 5px;
+  body {
+    display: flex;
+    font-family: Arial, sans-serif;
+  }
+  #left-section {
+    width: 30%;
+    padding: 10px;
+    border-right: 2px solid #ddd;
+  }
+  #right-section {
+    width: 70%;
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .countdown-container {
+    text-align: center;
+    width: 150px;
+    margin: 10px;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
   }
 </style>
 </head>
 <body>
 
-<h2>Enter Names and Numbers</h2>
-<div id="input-container">
-  <div class="input-pair">
-    <input type="text" placeholder="Name" class="name-input">
-    <input type="number" placeholder="Number" class="number-input" min="1">
+<div id="left-section">
+  <h2>Enter Names and Numbers</h2>
+  <div id="input-container">
+    <div class="input-pair">
+      <input type="text" placeholder="Name" class="name-input">
+      <input type="number" placeholder="Minutes" class="number-input" min="1">
+    </div>
   </div>
+  <button id="add-pair">Add Another Pair</button>
+  <button id="start-countdowns">Start Countdowns</button>
 </div>
 
-<button id="add-pair">Add Another Pair</button>
-<button id="submit">Submit</button>
+<div id="right-section">
+  <!-- Countdown graphics will be dynamically added here -->
+</div>
 
 <script>
-  let pairCount = 1;
-  const maxPairs = 10;
+  let countdownTimes = ["10:20", "11:50", "13:49", "15:15"];
+  let countdowns = [];
 
   document.getElementById("add-pair").addEventListener("click", function() {
-    if (pairCount < maxPairs) {
-      pairCount++;
-      const newPair = document.createElement("div");
-      newPair.className = "input-pair";
-      newPair.innerHTML = `
-        <input type="text" placeholder="Name" class="name-input">
-        <input type="number" placeholder="Number" class="number-input" min="1">
-      `;
-      document.getElementById("input-container").appendChild(newPair);
-    } else {
-      alert("Maximum of 10 pairs reached.");
-    }
+    const newPair = document.createElement("div");
+    newPair.className = "input-pair";
+    newPair.innerHTML = `
+      <input type="text" placeholder="Name" class="name-input">
+      <input type="number" placeholder="Minutes" class="number-input" min="1">
+    `;
+    document.getElementById("input-container").appendChild(newPair);
   });
 
-  document.getElementById("submit").addEventListener("click", function() {
-    const pairs = [];
+  document.getElementById("start-countdowns").addEventListener("click", function() {
     const names = document.querySelectorAll(".name-input");
     const numbers = document.querySelectorAll(".number-input");
 
+    // Get all input pairs and create countdowns
+    countdowns = [];
     for (let i = 0; i < names.length; i++) {
       const name = names[i].value;
-      const number = parseInt(numbers[i].value);
-      if (name && !isNaN(number)) {
-        pairs.push({ name, number });
+      const minutes = parseInt(numbers[i].value);
+      if (name && !isNaN(minutes)) {
+        countdowns.push({ name, minutes });
       }
     }
-
-    console.log(pairs); // Do something with pairs
+    startCountdowns();
   });
+
+  function startCountdowns() {
+    const now = new Date();
+    const nextTime = findNextCountdownTime(now);
+
+    countdowns.forEach((countdown, index) => {
+      const endTime = new Date(nextTime.getTime() + countdown.minutes * 60000);
+      createCountdownGraphic(countdown.name, endTime, countdown.minutes, index);
+    });
+  }
+
+  function findNextCountdownTime(now) {
+    for (let time of countdownTimes) {
+      const [hour, minute] = time.split(":").map(Number);
+      const nextTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
+      if (nextTime > now) return nextTime;
+    }
+    // If no time is left today, use the first time tomorrow
+    const [hour, minute] = countdownTimes[0].split(":").map(Number);
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, hour, minute);
+  }
+
+  function createCountdownGraphic(name, endTime, minutes, index) {
+    const container = document.createElement("div");
+    container.className = "countdown-container";
+    container.innerHTML = `<p>${name}</p><canvas id="canvas-${index}" width="150" height="150"></canvas>`;
+    document.getElementById("right-section").appendChild(container);
+
+    const canvas = document.getElementById(`canvas-${index}`);
+    const ctx = canvas.getContext("2d");
+
+    function updateCountdown() {
+      const now = new Date();
+      const remainingTime = (endTime - now) / 1000;
+      if (remainingTime <= 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      const percentRemaining = remainingTime / (minutes * 60);
+      drawCircle(ctx, percentRemaining);
+      requestAnimationFrame(updateCountdown);
+    }
+    updateCountdown();
+  }
+
+  function drawCircle(ctx, percentRemaining) {
+    ctx.clearRect(0, 0, 150, 150);
+    ctx.beginPath();
+    ctx.arc(75, 75, 70, 0, Math.PI * 2, false);
+    ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 10;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(75, 75, 70, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * percentRemaining, false);
+    ctx.strokeStyle = "#00f";
+    ctx.lineWidth = 10;
+    ctx.stroke();
+  }
 </script>
 
 </body>
