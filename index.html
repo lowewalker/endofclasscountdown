@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Input Names and Numbers</title>
+<style>
+  .input-pair {
+    margin-bottom: 5px;
+  }
+</style>
+</head>
+<body>
+
+<h2>Enter Names and Numbers</h2>
+<div id="input-container">
+  <div class="input-pair">
+    <input type="text" placeholder="Name" class="name-input">
+    <input type="number" placeholder="Number" class="number-input" min="1">
+  </div>
+</div>
+
+<button id="add-pair">Add Another Pair</button>
+<button id="submit">Submit</button>
+
+<script>
+  let pairCount = 1;
+  const maxPairs = 10;
+
+  document.getElementById("add-pair").addEventListener("click", function() {
+    if (pairCount < maxPairs) {
+      pairCount++;
+      const newPair = document.createElement("div");
+      newPair.className = "input-pair";
+      newPair.innerHTML = `
+        <input type="text" placeholder="Name" class="name-input">
+        <input type="number" placeholder="Number" class="number-input" min="1">
+      `;
+      document.getElementById("input-container").appendChild(newPair);
+    } else {
+      alert("Maximum of 10 pairs reached.");
+    }
+  });
+
+  document.getElementById("submit").addEventListener("click", function() {
+    const pairs = [];
+    const names = document.querySelectorAll(".name-input");
+    const numbers = document.querySelectorAll(".number-input");
+
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i].value;
+      const number = parseInt(numbers[i].value);
+      if (name && !isNaN(number)) {
+        pairs.push({ name, number });
+      }
+    }
+
+    console.log(pairs); // Do something with pairs
+  });
+</script>
+
+</body>
+</html>
